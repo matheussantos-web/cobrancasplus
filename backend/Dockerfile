@@ -22,4 +22,11 @@ RUN mkdir -p /tmp /app/data
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+
+# ENTRYPOINT com diagnostico: imprime marcadores antes de subir o app para
+# evidenciar no log do Render onde ocorre a falha (build vs JVM vs jar).
+ENTRYPOINT ["sh", "-c", \
+  "echo '[diag] conteudo de /app:'; ls -la /app; " \
+  "echo '[diag] java:'; java -version 2>&1; " \
+  "echo '[diag] iniciando app.jar...'; " \
+  "exec java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
