@@ -36,9 +36,9 @@ Adicione um disco persistente:
   - **Mount Path**: `/app/data`
   - **Size**: 1 GB
 
-O `Dockerfile` cria `/app/data` e o SQLite resolve `jdbc:sqlite:./data/emprestimos.db` para
-`/app/data/emprestimos.db` dentro do container (WORKDIR `/app`). A variável `SPRING_DATASOURCE_URL`
-abaixo deixa o caminho explícito.
+O `Dockerfile` cria `/tmp` e `/app/data` dentro do container. Por padrão o SQLite usa
+`jdbc:sqlite:/tmp/emprestimos.db` (efêmero); para persistir entre deploys aponte
+`SPRING_DATASOURCE_URL` para o disco montado: `jdbc:sqlite:/app/data/emprestimos.db` (abaixo).
 
 ### 1.3 Variáveis de Ambiente (Environment Variables)
 
