@@ -1,0 +1,45 @@
+# ============================================================
+# Cobrancas+ — conteinerização para deploy
+# Backend (Spring Boot :8080) + Frontend (Next.js :3000)
+# ============================================================
+#
+# O banco SQLite do backend e persistido em volume nomeado local
+# ./data (raiz do projeto), montado em /app/data dentro do
+# container -- o arquivo emprestimos.db sobrevive a `docker compose down`.
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: cobrancas-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # OBRIGATORIA em producao: defina JWT_SECRET via .env ou variavel de
+      # ambiente (minimo 48 bytes). Sem valor, o backend recusa subir.
+      JWT_SECRET: ${JWT_SECRET:}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      # true exige HTTPS; use false temporariamente em http/IP locais.
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      # Strict/Lax em mesmo site; None (cross-site, ex.: Vercel+Render) exige
+      # COOKIE_SECURE=true. Se vazio, deixa o navegador decidir (Lax).
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-Strict}
+      # Valida dominio do e-mail (registros MX) no processo de registro.
+      VALIDAR_MX: ${VALIDAR_MX:-true}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Inlined no build (NEXT_PUBLIC_*). Aponte para o backend publicado
+        # em producao (ex.: https://api.seudominio.com).
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    container_name: cobrancas-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped

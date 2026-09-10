@@ -1,0 +1,28 @@
+# Build
+backend/target/
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/next-env.d.ts
+
+# Banco SQLite local
+backend/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Env
+frontend/.env.local
+!.env.example
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
