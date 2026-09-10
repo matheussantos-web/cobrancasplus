@@ -1,0 +1,20 @@
+# Maven
+target/
+*.class
+
+# Dados do SQLite
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Logs
+*.log
