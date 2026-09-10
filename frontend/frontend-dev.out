@@ -1,0 +1,62 @@
+
+> frontend@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.16.0.2:3000
+- Environments: .env.local
+✓ Ready in 857ms
+✓ Running next.config.ts took 64ms
+
+ GET /dashboard 200 in 395ms (next.js: 232ms, application-code: 164ms)
+ GET /dashboard 200 in 43ms (next.js: 8ms, application-code: 34ms)
+ GET / 200 in 116ms (next.js: 44ms, application-code: 72ms)
+ GET /entrar 200 in 59ms (next.js: 34ms, application-code: 25ms)
+ GET /dashboard 200 in 50ms (next.js: 15ms, application-code: 35ms)
+ GET / 200 in 49ms (next.js: 30ms, application-code: 18ms)
+ GET /dashboard 200 in 32ms (next.js: 8ms, application-code: 24ms)
+ GET /entrar 200 in 29ms (next.js: 7ms, application-code: 22ms)
+ GET /dashboard 200 in 46ms (next.js: 7ms, application-code: 38ms)
+ GET /entrar 200 in 30ms (next.js: 9ms, application-code: 21ms)
+ GET /dashboard 200 in 24ms (next.js: 7ms, application-code: 18ms)
+ GET /dashboard 200 in 22ms (next.js: 7ms, application-code: 16ms)
+ GET /dashboard 200 in 26ms (next.js: 8ms, application-code: 18ms)
+⚠ Fast Refresh had to perform a full reload when ./src/services/authService.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 80ms
+ GET /dashboard 200 in 92ms (next.js: 24ms, application-code: 68ms)
+ GET /dashboard 200 in 44ms (next.js: 6ms, application-code: 38ms)
+⚠ Fast Refresh had to perform a full reload when ./src/components/AuthProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 43ms
+ GET /dashboard 200 in 78ms (next.js: 16ms, application-code: 62ms)
+ GET /dashboard 200 in 41ms (next.js: 6ms, application-code: 35ms)
+⚠ Fast Refresh had to perform a full reload when ./src/components/AuthProvider.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 47ms
+ GET /dashboard 200 in 86ms (next.js: 26ms, application-code: 60ms)
+ GET /dashboard 200 in 37ms (next.js: 6ms, application-code: 31ms)
+ GET /dashboard 200 in 30ms (next.js: 7ms, application-code: 23ms)
+ GET /dashboard 200 in 24ms (next.js: 6ms, application-code: 18ms)
+ GET /dashboard 200 in 26ms (next.js: 8ms, application-code: 18ms)
+ GET /dashboard 200 in 35ms (next.js: 9ms, application-code: 26ms)
+ GET /dashboard 200 in 36ms (next.js: 9ms, application-code: 27ms)
+ GET /dashboard 200 in 27ms (next.js: 8ms, application-code: 19ms)
+✓ Compiled in 87ms
+✓ Compiled in 37ms
+ GET /dashboard 200 in 52ms (next.js: 17ms, application-code: 35ms)
+ GET /dashboard 200 in 33ms (next.js: 14ms, application-code: 19ms)
+✓ Compiled in 38ms
+ GET /dashboard 200 in 38ms (next.js: 7ms, application-code: 31ms)
+ GET /dashboard 200 in 43ms (next.js: 15ms, application-code: 28ms)
+ GET /dashboard 200 in 34ms (next.js: 6ms, application-code: 27ms)
+ GET /dashboard 200 in 32ms (next.js: 6ms, application-code: 26ms)
+ GET / 200 in 41ms (next.js: 12ms, application-code: 30ms)
+ GET /dashboard 200 in 30ms (next.js: 5ms, application-code: 25ms)
+ GET /entrar 200 in 64ms (next.js: 12ms, application-code: 53ms)
+ GET /dashboard 200 in 37ms (next.js: 12ms, application-code: 25ms)
+ GET /entrar 200 in 27ms (next.js: 8ms, application-code: 20ms)
+ GET /entrar 200 in 33ms (next.js: 10ms, application-code: 23ms)
+ GET / 200 in 31ms (next.js: 6ms, application-code: 25ms)
+ GET /entrar 200 in 28ms (next.js: 9ms, application-code: 20ms)
+ GET /dashboard 200 in 43ms (next.js: 25ms, application-code: 18ms)
+ GET / 200 in 45ms (next.js: 12ms, application-code: 33ms)
+ GET /dashboard 200 in 29ms (next.js: 7ms, application-code: 22ms)
