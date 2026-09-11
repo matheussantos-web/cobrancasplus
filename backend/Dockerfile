@@ -40,10 +40,15 @@ ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=40 -XX:MaxM
 
 # ENTRYPOINT com diagnostico: imprime marcadores antes de subir o app para
 # evidenciar no log do Render onde ocorre a falha (build vs JVM vs jar).
+# 'set -e' garante que qualquer erro do shell derrube o container (nao mascara).
+# Nao usa forma exec (JSON) para -Dserver.port=${PORT}: lá o ${PORT} nao
+# expandiria; o shell resolve a variavel do Render.
 ENTRYPOINT ["sh", "-c", \
   "set -e; " \
   "echo '[diag] orcamento:'; echo \"$JAVA_TOOL_OPTIONS\"; " \
   "echo '[diag] app:'; ls -la /app; " \
   "echo '[diag] java:'; java -version 2>&1; " \
   "echo '[diag] iniciando app.jar (port ${PORT:-8080})...'; " \
-  "exec java -Dserver.port=${PORT} -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
+  "exec java -Dserver.port=${PORT} " \
+    "-Dlogging.level.root=INFO -Dlogging.level.com.emprestimos=DEBUG " \
+    "-Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
