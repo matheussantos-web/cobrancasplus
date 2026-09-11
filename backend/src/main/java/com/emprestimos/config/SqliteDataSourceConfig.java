@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
@@ -16,8 +17,12 @@ import org.sqlite.SQLiteDataSource;
  * Configura a origem de dados SQLite ativando o modo WAL (Write-Ahead Logging)
  * e definindo um timeout de ocupacao para evitar travamentos de arquivo em
  * acessos concorrentes de multiplos usuarios.
+ *
+ * <p>Ativo apenas fora do perfil {@code prod}: em producao o datasource eh o
+ * PostgreSQL gerenciado automaticamente pelo Spring Boot.
  */
 @Configuration
+@Profile("!prod")
 public class SqliteDataSourceConfig {
 
     private final String url;

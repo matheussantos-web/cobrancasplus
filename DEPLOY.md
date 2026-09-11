@@ -1,6 +1,6 @@
 # Deploy — Cobrancas+ (Render + Vercel)
 
-Implantação gratuita/hospedada: **Backend (Spring Boot + SQLite)** no [Render](https://render.com) e
+Implantação gratuita/hospedada: **Backend (Spring Boot + PostgreSQL)** no [Render](https://render.com) e
 **Frontend (Next.js)** na [Vercel](https://vercel.com).
 
 > **Domínios diferentes (cross-site):** o frontend (`*.vercel.app`) e o backend (`*.onrender.com`) são
@@ -26,29 +26,30 @@ Implantação gratuita/hospedada: **Backend (Spring Boot + SQLite)** no [Render]
 > **Sem Docker**: seria necessário adicionar o Maven Wrapper (`./mvnw`) — os passos usam Docker por
 > já existir e ser idempotente.
 
-### 1.2 Disco persistente (SQLite)
+### 1.2 Banco de dados (PostgreSQL — Neon)
 
-Instâncias gratuitas do Render reiniciam o disco **efêmero** — o arquivo `emprestimos.db` seria perdido.
-Adicione um disco persistente:
+O backend usa **PostgreSQL em produção** (perfil `prod`), **não** disco/arquivo. Isso evita o disco
+persistente, que **não é suportado em instâncias gratuitas do Render** ("Paid services can preserve local
+filesystem changes by attaching a persistent disk, but Free web services cannot").
 
-- **Disks → Add Disk**
-  - **Name**: `sqlite-data`
-  - **Mount Path**: `/app/data`
-  - **Size**: 1 GB
+1. Crie uma base grátis no [Neon](https://neon.tech) (ou use um PostgreSQL gerido do Render).
+2. Copie a **connection string** (`postgresql://...`) — ela já contém usuário/senha; o pooler `-pooler`
+   recomendado para conexões JDBC.
+3. Cole-a em `SPRING_DATASOURCE_URL` (Envs, abaixo). **Nunca** coloque a senha no código/git.
 
-O `Dockerfile` cria `/tmp` e `/app/data` dentro do container. Por padrão o SQLite usa
-`jdbc:sqlite:/tmp/emprestimos.db` (efêmero); para persistir entre deploys aponte
-`SPRING_DATASOURCE_URL` para o disco montado: `jdbc:sqlite:/app/data/emprestimos.db` (abaixo).
+> **SQLite** permanece como banco de dev/testes local (perfil default + `application-test.properties`).
+> Em produção o perfil `prod` troca o driver/dialeto e usa as migrações `db/migration-postgres`.
 
 ### 1.3 Variáveis de Ambiente (Environment Variables)
 
 | Chave | Valor | Observação |
 |---|---|---|
+| `SPRING_PROFILES_ACTIVE` | `prod` | **Obrigatória** — ativa PostgreSQL + `db/migration-postgres` |
+| `SPRING_DATASOURCE_URL` | `postgresql://USUARIO:SENHA@host/db?sslmode=require` | Connection string do Neon (com credenciais) |
 | `JWT_SECRET` | *(aleatória com ≥48 bytes / 384 bits)* | **Obrigatória** — sem ela o boot falha (fail-fast no `JwtService`) |
 | `COOKIE_SECURE` | `true` | Obrigatório: Render serve HTTPS |
 | `COOKIE_SAME_SITE` | `None` | **Essencial (cross-site)**: permite o cookie do `onrender.com` ser enviado a partir do `vercel.app` |
 | `CORS_ALLOWED_ORIGINS` | `https://seu-app.vercel.app` | Origem real do frontend (sem barra final) |
-| `SPRING_DATASOURCE_URL` | `jdbc:sqlite:/app/data/emprestimos.db` | Aponta para o disco persistente |
 | `VALIDAR_MX` | `true` | Valida domínio MX no registro (default) |
 
 > Gerar `JWT_SECRET` (PowerShell): `-join ((48..127) | Get-Random -Count 48 | % {[char]$_})`.
@@ -56,10 +57,22 @@ O `Dockerfile` cria `/tmp` e `/app/data` dentro do container. Por padrão o SQLi
 O Render injeta `PORT` automaticamente; o backend escuta em `server.port=${PORT:8080}`
 (`application.properties`).
 
+> **⚠ Sobre o parâmetro `channel_binding`**: é nativo do `psql`, não do driver JDBC. Pode deixar na URL
+> (o driver ignora parâmetros desconhecidos), mas é mais limpo usar apenas
+> `?sslmode=require` no `SPRING_DATASOURCE_URL`.
+>
+> **Formato:** o backend aceita a connection string com **ou sem** o prefixo `jdbc:` — tanto
+> `postgresql://USUARIO:SENHA@host/db` (como o Neon exibe) quanto `jdbc:postgresql://...` funcionam.
+
 ### 1.4 Migrações
 
-O Flyway roda no boot (`spring.flyway.enabled=true`, `locations=classpath:db/migration`), criando/atualizando
-o schema no disco persistente sem ação manual.
+O Flyway roda no boot, criando/atualizando o schema **sem ação manual**:
+
+- **Produção** (`prod`): `locations=classpath:db/migration-postgres` (sintaxe PostgreSQL); a base Neon
+  começa vazia e recebe `V1`/`V2` no primeiro deploy.
+- **Dev/testes** (default com SQLite): `locations=classpath:db/migration` (sintaxe SQLite).
+
+> Se a base Neon não estiver vazia, o Flyway exige o schema igual (mesma cronologia de migrações).
 
 ---
 
@@ -109,5 +122,5 @@ o schema no disco persistente sem ação manual.
 ## Rollback / Atualização
 
 - Render: novo push na branch do web service dispara novo build (`./Dockerfile` → `mvn package`).
-  O disco `/app/data` persiste entre deploys.
+  Os dados ficam no PostgreSQL (Neon) — sobrevivem a restarts/deploys, independente do disco do container.
 - Vercel: novo push na branch de produção redeploya o frontend.

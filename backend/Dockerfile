@@ -16,7 +16,7 @@ RUN mvn -q -B clean package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Diretorios que podem ser montados como volume (ex.: disco persistente do Render)
+# Diretorios utilitarios (o banco em producao e PostgreSQL via perfil 'prod').
 RUN mkdir -p /tmp /app/data
 
 COPY --from=build /app/target/*.jar app.jar
