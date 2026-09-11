@@ -145,6 +145,13 @@ O Flyway roda no boot, criando/atualizando o schema **sem ação manual**:
 > `NEXT_PUBLIC_*` é embutida **em build-time** no `src/lib/api.ts`; é consumida pelo navegador
 > (`fetch` com `credentials: "include"`). Alterá-la exige novo deploy (variável de **build**).
 
+2. **Variáveis reais em produção** (atualizar seus valores):
+
+| Chave | Valor |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://cobrancas-backend.fly.dev` |
+| `CORS_ALLOWED_ORIGINS` (segredo no Fly) | `https://cobrancasplusapp.vercel.app` |
+
 ---
 
 ## PARTE 3 — Ordem de deploy
