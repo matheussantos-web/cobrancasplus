@@ -133,8 +133,9 @@ O Flyway roda no boot, criando/atualizando o schema **sem ação manual**:
 ## PARTE 2 — Frontend na Vercel
 
 1. **Add New + > Project** → importe o repositório.
-2. **Root Directory**: `frontend` (Next.js detectado automaticamente; `next.config.ts` usa
-   `output: "standalone"`, compatível).
+2. **Root Directory**: `frontend` (Next.js detectado automaticamente). O `next.config.ts` **não** usa
+   `output: "standalone"` — **de propósito**: na Vercel o Frontend Cloud gerencia o deploy; manter
+   `standalone` em monorepo (`/vercel/path0/frontend`) quebra com `ENOENT .../next-server.js.nft.json`.
 3. **Environment Variables** (durante a criação ou em **Settings → Environment Variables**):
 
 | Chave | Valor |
