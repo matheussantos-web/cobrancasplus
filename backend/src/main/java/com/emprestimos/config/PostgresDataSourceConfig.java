@@ -34,11 +34,19 @@ public class PostgresDataSourceConfig {
 
     @Bean
     @Primary
-    public DataSource dataSource(@Value("${spring.datasource.url}") String url) {
+    public DataSource dataSource(
+            @Value("${spring.datasource.url}") String url,
+            @Value("${spring.datasource.hikari.maximum-pool-size:5}") int maximumPoolSize,
+            @Value("${spring.datasource.hikari.minimum-idle:1}") int minimumIdle,
+            @Value("${spring.datasource.hikari.idle-timeout:30000}") long idleTimeout,
+            @Value("${spring.datasource.hikari.max-lifetime:60000}") long maxLifetime) {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.postgresql.Driver");
         config.setJdbcUrl(extrairCredenciais(url, config));
-        config.setMaximumPoolSize(5);
+        config.setMaximumPoolSize(maximumPoolSize);
+        config.setMinimumIdle(minimumIdle);
+        config.setIdleTimeout(idleTimeout);
+        config.setMaxLifetime(maxLifetime);
         return new HikariDataSource(config);
     }
 

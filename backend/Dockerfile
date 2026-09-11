@@ -24,12 +24,19 @@ RUN mkdir -p /app/data /tmp && chmod -R 777 /app/data /tmp
 
 COPY --from=build /app/target/*.jar app.jar
 
+# Variavel de porta padrao (o Render injeta PORT dinamicamente).
+ENV PORT=8080
+
 EXPOSE 8080
 
 # Orcamento de memoria para instancias pequenas (Render free: 512 MB RAM):
-# limita heap, metaspace e code cache para o JVM nao estourar a cgroup na
-# inicializacao. UseSerialGC mantem o RSS baixo removendo threads paralelas de GC.
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=40 -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=96m -XX:+UseSerialGC"
+# limita heap (~40%), metaspace e code cache para o JVM nao estourar a cgroup
+# na inicializacao (RSS medido ~297MB em boot local com estas flags).
+# UseSerialGC mantem o RSS baixo removendo threads paralelas de GC.
+# NOTA: usa 40% (≈204MB de heap) em vez de MaxRAMPercentage=75, que num
+# container de 512MB deixaria o heap crescer a ~384MB + overhead nativo e
+# reintroduziria o OOM que causava "Exited with status 128" no Render.
+ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=40 -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=96m -XX:+UseSerialGC"
 
 # ENTRYPOINT com diagnostico: imprime marcadores antes de subir o app para
 # evidenciar no log do Render onde ocorre a falha (build vs JVM vs jar).
@@ -39,4 +46,4 @@ ENTRYPOINT ["sh", "-c", \
   "echo '[diag] app:'; ls -la /app; " \
   "echo '[diag] java:'; java -version 2>&1; " \
   "echo '[diag] iniciando app.jar (port ${PORT:-8080})...'; " \
-  "exec java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
+  "exec java -Dserver.port=${PORT} -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
