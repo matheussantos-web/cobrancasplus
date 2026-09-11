@@ -22,6 +22,9 @@ WORKDIR /app
 # Diretorios utilitarios com permissao de escrita (evita falha de boot)
 RUN mkdir -p /app/data /tmp && chmod -R 777 /app/data /tmp
 
+# Marcador para invalidar cache do Render: v3.0
+RUN echo "Rebuild Render v3.0"
+
 COPY --from=build /app/target/*.jar app.jar
 
 # Variavel de porta padrao (o Render injeta PORT dinamicamente).
