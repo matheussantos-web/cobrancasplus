@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { buscarSessao, cadastrar, encerrarSessao, logar } from "@/services/authService";
+import { armazenarToken, removerToken } from "@/lib/api";
 import type { UsuarioSessao } from "@/types";
 
 interface AuthContextValue {
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const entrar = useCallback(async (email: string, senha: string) => {
     const res = await logar(email, senha);
+    armazenarToken(res.token);
     setUsuario({
       id: res.usuarioId,
       nome: res.nome,
@@ -79,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Cookie pode ja ter expirado; seguir para o estado deslogado.
     }
+    removerToken();
     setUsuario(null);
   }, []);
 

@@ -1,4 +1,13 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const TOKEN_KEY = "emprestimos_token";
+
+export function armazenarToken(token: string): void {
+  if (typeof window !== "undefined") localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function removerToken(): void {
+  if (typeof window !== "undefined") localStorage.removeItem(TOKEN_KEY);
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -26,15 +35,17 @@ async function parseErro(res: Response): Promise<ApiError> {
 }
 
 /**
- * Cliente HTTP unico. Nao injeta Authorization: a autenticacao viaja no cookie
- * de sessao httpOnly (credentials: "include"); o backend tambem aceita
- * Authorization: Bearer em testes/ferramentas.
+ * Cliente HTTP unico. Injeta Authorization: Bearer com o token salvo em
+ * localStorage; o backend tambem aceita o cookie de sessao para compatibilidade.
  */
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const { headers, ...resto } = options;
 
+  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+
   const cabecalhos: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(headers as Record<string, string> | undefined),
   };
 
