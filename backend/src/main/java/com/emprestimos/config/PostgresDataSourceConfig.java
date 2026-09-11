@@ -36,13 +36,15 @@ public class PostgresDataSourceConfig {
     @Primary
     public DataSource dataSource(
             @Value("${spring.datasource.url}") String url,
+            @Value("${spring.datasource.username:}") String username,
+            @Value("${spring.datasource.password:}") String password,
             @Value("${spring.datasource.hikari.maximum-pool-size:5}") int maximumPoolSize,
             @Value("${spring.datasource.hikari.minimum-idle:1}") int minimumIdle,
             @Value("${spring.datasource.hikari.idle-timeout:30000}") long idleTimeout,
             @Value("${spring.datasource.hikari.max-lifetime:60000}") long maxLifetime) {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.postgresql.Driver");
-        config.setJdbcUrl(extrairCredenciais(url, config));
+        config.setJdbcUrl(extrairCredenciais(url, config, username, password));
         config.setMaximumPoolSize(maximumPoolSize);
         config.setMinimumIdle(minimumIdle);
         config.setIdleTimeout(idleTimeout);
@@ -50,7 +52,7 @@ public class PostgresDataSourceConfig {
         return new HikariDataSource(config);
     }
 
-    private String extrairCredenciais(String url, HikariConfig config) {
+    private String extrairCredenciais(String url, HikariConfig config, String username, String password) {
         String entrada = url == null ? "" : url.trim();
         if (entrada.isEmpty()) {
             return entrada;
@@ -76,6 +78,12 @@ public class PostgresDataSourceConfig {
                 URI limpo = new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(),
                         uri.getPath(), uri.getQuery(), uri.getFragment());
                 soUrl = limpo.toString();
+            } else if (username != null && !username.isEmpty()) {
+                // Fallback: credenciais em variaveis individuais (SPRING_DATASOURCE_USERNAME/PASSWORD).
+                config.setUsername(username);
+                if (password != null && !password.isEmpty()) {
+                    config.setPassword(password);
+                }
             }
         } catch (URISyntaxException ignore) {
             // URL nao parseavel como URI (ex.: prefixo jdbc nao convencional):

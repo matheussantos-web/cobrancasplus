@@ -1,16 +1,70 @@
-# Deploy — Cobrancas+ (Render + Vercel)
+# Deploy — Cobrancas+ (Fly.io/Render + Neon + Vercel)
 
-Implantação gratuita/hospedada: **Backend (Spring Boot + PostgreSQL)** no [Render](https://render.com) e
-**Frontend (Next.js)** na [Vercel](https://vercel.com).
+Implantação gratuita/hospedada: **Backend (Spring Boot + PostgreSQL)** em [Fly.io](https://fly.io)
+(opção recomendada) ou [Render](https://render.com); **Frontend (Next.js)** na [Vercel](https://vercel.com);
+**banco** no [Neon](https://neon.tech).
 
-> **Domínios diferentes (cross-site):** o frontend (`*.vercel.app`) e o backend (`*.onrender.com`) são
-> sites distintos para o navegador. Isso exige o cookie de sessão com `SameSite=None; Secure`, senão o
-> cookie **nunca** é enviado nas requisições da Vercel ao Render (todas as APIs autenticadas retornariam 401).
+> **Domínios diferentes (cross-site):** o frontend (`*.vercel.app`) e o backend (`*.fly.dev` / `*.onrender.com`)
+> são sites distintos para o navegador. Isso exige o cookie de sessão com `SameSite=None; Secure`, senão o
+> cookie **nunca** é enviado nas requisições da Vercel ao backend (todas as APIs autenticadas retornariam 401).
 > As configurações abaixo já contemplam este cenário.
 
 ---
 
-## PARTE 1 — Backend + Banco no Render
+## PARTE 0 — Deploy no Fly.io (recomendado)
+
+A instância gratuita do Render (512 MB) não está subindo a JVM via Docker (`Exited with status 128` sem
+nenhum log — falha no nível do container, antes do Java iniciar). O Fly.io permite 512 MB com compartilhamento
+de CPU estável no início, com a mesma imagem Alpine do `backend/Dockerfile`.
+
+### 0.1 Pré-requisitos
+
+```bash
+fly auth login
+```
+
+### 0.2 Segredos (Neon + JWT) — substitua os placeholders
+
+```bash
+fly secrets set \
+  JWT_SECRET="<GERADO_COM_48+_BYTES>" \
+  COOKIE_SECURE="true" \
+  COOKIE_SAME_SITE="None" \
+  CORS_ALLOWED_ORIGINS="https://seu-app.vercel.app" \
+  SPRING_DATASOURCE_URL="jdbc:postgresql://<HOST_DO_NEON>/neondb?sslmode=require" \
+  SPRING_DATASOURCE_USERNAME="<USUARIO_NEON>" \
+  SPRING_DATASOURCE_PASSWORD="<SENHA_NEON>"
+```
+
+> A connection string pode ter credenciais embutidas **ou** usar `SPRING_DATASOURCE_USERNAME`/
+> `SPRING_DATASOURCE_PASSWORD` separadas — o `PostgresDataSourceConfig` aceita os dois formatos
+> (usa credenciais individuais como fallback quando a URL não traz userinfo).
+>
+> Gerar `JWT_SECRET` (PowerShell): `-join ((48..127) | Get-Random -Count 48 | % {[char]$_})`.
+
+### 0.3 Deploy
+
+Na pasta `backend/` (onde está o `fly.toml`):
+
+```bash
+fly deploy
+```
+
+O `fly.toml` já define: região `gru`, `SPRING_PROFILES_ACTIVE=prod` (PostgreSQL + `db/migration-postgres`),
+porta interna 8080 (igual a `server.port=${PORT:8080}`), máquina 512MB/1 CPU compartilhada e
+`auto_stop/start_machines` (dorme/desperta sem custo ocioso). O Fly roda o `backend/Dockerfile` (Alpine +
+`-Xmx256m -XX:+UseSerialGC` — RSS ~297MB medido localmente).
+
+> Migrações: o Flyway roda no boot e aplica `V1`/`V2` na base Neon. Com `auto_stop_machines`,
+> a primeira requisição após dormência "acorda" o container (alguns segundos).
+
+### 0.4 Pegue a URL gerada
+
+`fly status` mostra o hostname `https://<app>.fly.dev` — use-o no `NEXT_PUBLIC_API_URL` da Vercel.
+
+---
+
+## PARTE 1 — Backend + Banco no Render (alternativa)
 
 ### 1.1 Criar o Web Service
 
