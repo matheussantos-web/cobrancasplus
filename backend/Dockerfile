@@ -22,36 +22,18 @@ WORKDIR /app
 # Diretorios utilitarios com permissao de escrita (evita falha de boot)
 RUN mkdir -p /app/data /tmp && chmod -R 777 /app/data /tmp
 
-# Marcador para invalidar cache do Render: v3.0
-RUN echo "Rebuild Render v3.0"
+# Marcador para invalidar cache do Render: v4.0
+RUN echo "Rebuild Render v4.0"
 
 COPY --from=build /app/target/*.jar app.jar
 
-# Variavel de porta padrao (o Render injeta PORT dinamicamente).
-ENV PORT=8080
-
 EXPOSE 8080
 
-# Orcamento de memoria para instancias pequenas (Render free: 512 MB RAM):
-# limita heap (~40%), metaspace e code cache para o JVM nao estourar a cgroup
-# na inicializacao (RSS medido ~297MB em boot local com estas flags).
-# UseSerialGC mantem o RSS baixo removendo threads paralelas de GC.
-# NOTA: usa 40% (≈204MB de heap) em vez de MaxRAMPercentage=75, que num
-# container de 512MB deixaria o heap crescer a ~384MB + overhead nativo e
-# reintroduziria o OOM que causava "Exited with status 128" no Render.
-ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=40 -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=96m -XX:+UseSerialGC"
-
-# ENTRYPOINT com diagnostico: imprime marcadores antes de subir o app para
-# evidenciar no log do Render onde ocorre a falha (build vs JVM vs jar).
-# 'set -e' garante que qualquer erro do shell derrube o container (nao mascara).
-# Nao usa forma exec (JSON) para -Dserver.port=${PORT}: lá o ${PORT} nao
-# expandiria; o shell resolve a variavel do Render.
-ENTRYPOINT ["sh", "-c", \
-  "set -e; " \
-  "echo '[diag] orcamento:'; echo \"$JAVA_TOOL_OPTIONS\"; " \
-  "echo '[diag] app:'; ls -la /app; " \
-  "echo '[diag] java:'; java -version 2>&1; " \
-  "echo '[diag] iniciando app.jar (port ${PORT:-8080})...'; " \
-  "exec java -Dserver.port=${PORT} " \
-    "-Dlogging.level.root=INFO -Dlogging.level.com.emprestimos=DEBUG " \
-    "-Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
+# Execucao direta do Java (exec form): sem shell 'sh' intermediario, sinais
+# SIGTERM/SIGKILL chegam direto no JVM e a porta NÃO e passada via -Dserver.port
+# (em forma exec ${PORT} nao expandiria). O server.port=${PORT:8080} em
+# application.properties resolve a porta do ambiente do Render.
+# Orcamento de memoria validado localmente (RSS ~297MB em boot):
+#   -Xmx256m + UseSerialGC (serial usa 1 thread de GC, nao estoura CPU 0.1)
+#   + metaspace/codecache limitados. G1GC com -Xmx350m estouraria os 512MB.
+ENTRYPOINT ["java", "-Xmx256m", "-Xms128m", "-XX:MaxMetaspaceSize=192m", "-XX:ReservedCodeCacheSize=96m", "-XX:+UseSerialGC", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
