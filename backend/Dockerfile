@@ -23,9 +23,16 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
+# Orcamento de memoria para instancias pequenas (Render free: 512 MB RAM):
+# limita heap, metaspace e code cache para o JVM nao estourar a cgroup na
+# inicializacao (escape de OOM -> "Exited with status 128"). UseSerialGC
+# mantem o RSS baixo removendo threads paralelas de GC.
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=40 -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=96m -XX:+UseSerialGC"
+
 # ENTRYPOINT com diagnostico: imprime marcadores antes de subir o app para
 # evidenciar no log do Render onde ocorre a falha (build vs JVM vs jar).
 ENTRYPOINT ["sh", "-c", \
+  "echo '[diag] orcamento JVM:'; echo \"$JAVA_TOOL_OPTIONS\"; " \
   "echo '[diag] conteudo de /app:'; ls -la /app; " \
   "echo '[diag] java:'; java -version 2>&1; " \
   "echo '[diag] iniciando app.jar...'; " \
